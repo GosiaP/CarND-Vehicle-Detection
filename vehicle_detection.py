@@ -3,10 +3,8 @@ from classifier import *
 from scipy.ndimage.measurements import label
 from moviepy.editor import VideoFileClip
 
-NFRAMES = 1
-
+# ncapsulates heat map to filter false positives predicted by classifier.
 class HeatMap:
-    # Constructs a new heat map
     def __init__(self, image_size):
         self.history = []
         self.map = np.zeros((image_size[0], image_size[1]), np.float32)
@@ -16,11 +14,10 @@ class HeatMap:
         # Append x values
         self.history.append(heatmap)
 
-        # Enforce history size
+        # only 10 video frames will be stored
         if len(self.history) > 10:
             self.history.pop(0)
 
-        # Calculate mean based on history
         mean_map = np.zeros(self.map.shape)
         mean_count = 0
         for map in self.history:
@@ -30,13 +27,10 @@ class HeatMap:
         mean_map /= mean_count
         return mean_map
 
-    # Adds heat
     def add_heat(self, boxes):
         for box in boxes:
             self.map[box[0][1]:box[1][1], box[0][0]:box[1][0]] += 1.0
 
-
-    # Apply threshold
     def apply_threshold(self, threshold):
         max_heat = np.max(self.map)
         if max_heat > 0.0:
